@@ -2,7 +2,7 @@
 //  Then.swift
 //  iOSRepositories
 //
-//  Created by Order Tiger on 5/6/21.
+//  Created by Cuong Le on 5/6/21.
 //  Copyright © All rights reserved.
 //
 

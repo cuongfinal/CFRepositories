@@ -2,7 +2,7 @@
 //  ResourceType.swift
 //  iOSRepositories
 //
-//  Created by Order Tiger on 1/3/21.
+//  Created by Cuong Le on 1/3/21.
 //  Copyright © All rights reserved.
 //
 
@@ -23,6 +23,13 @@ extension ResourceType {
 
     func urlRequest(baseURL: String) throws -> URLRequest {
         guard let url = URL(string: baseURL + endPoint.path), !baseURL.isEmpty else {
+            throw NetworkError.invalidURL
+        }
+        return try buildRequest(to: url)
+    }
+    
+    func urlRequest() throws -> URLRequest {
+        guard let url = URL(string: endPoint.path), !endPoint.path.isEmpty else {
             throw NetworkError.invalidURL
         }
         return try buildRequest(to: url)

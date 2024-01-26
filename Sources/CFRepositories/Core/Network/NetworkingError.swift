@@ -2,7 +2,7 @@
 //  NetworkingError.swift
 //  iOSRepositories
 //
-//  Created by Order Tiger on 1/3/21.
+//  Created by Cuong Le on 1/3/21.
 //  Copyright © All rights reserved.
 //
 // swiftlint:disable line_length

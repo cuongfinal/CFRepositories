@@ -2,7 +2,7 @@
 //  Extensions.swift
 //  iOSRepositories
 //
-//  Created by Order Tiger on 1/3/21.
+//  Created by Cuong Le on 1/3/21.
 //  Copyright © All rights reserved.
 //
 
@@ -14,7 +14,8 @@ var authHeader: HTTPHeaders? {
 //    guard let token: String = try? KeychainStore.shared.find(for: .token) else {
 //        return nil
 //    }
-    return ["Authorization": "Bearer " + "token"]
+//    return ["Authorization": "Bearer " + "token"]
+    return nil
 }
 
 public extension String {

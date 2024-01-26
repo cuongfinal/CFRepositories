@@ -2,7 +2,7 @@
 //  iOSRepositories.swift
 //  iOSRepositories
 //
-//  Created by Order Tiger on 30 Mar 2021.
+//  Created by Cuong Le on 30 Mar 2021.
 //  Copyright © All rights reserved.
 //
 
@@ -29,15 +29,17 @@ public protocol RequestInterceptor {
 public protocol ServiceConfiguration {
     var environment: NetworkEnvironment { get }
     var urlSession: URLSession { get }
-    var interceptor: RequestInterceptor { get }
+//    var interceptor: RequestInterceptor { get }
 }
 
 public protocol AppEnvironment {
+    var appState: AppStore<AppState> { get }
     var serviceConfig: ServiceConfiguration { get }
+    var systemEventsHandler: SystemEvents { get }
 }
 
 /// RepositoryModule module definition
-public final class IOSRepositories<T: AppEnvironment> {
+public final class CFRepositories<T: AppEnvironment> {
     // MARK: - Fields
     var env: T
     // MARK: - Initializers
@@ -52,13 +54,12 @@ public final class IOSRepositories<T: AppEnvironment> {
     
     /// Registers DI
     public func registerDI() {
-        print("IOSRepositories registerDI")
-//        Resolver.register { self.env.appState }.scope(.shared)
-//        Resolver.register { self.env.companyConfig }.scope(.shared)
-//        Resolver.register { self.env.systemEventsHandler }.scope(.shared)
+        print("CFRepositories registerDI")
+        Resolver.register { self.env.appState }.scope(.shared)
+        Resolver.register { self.env.systemEventsHandler }.scope(.shared)
         
-//        Resolver.register {
-//            SystemWebRepositoryImpl(configuration: self.env.serviceConfig)
-//        }.implements(SystemWebRepository.self)
+        Resolver.register {
+            AuthRepositoryImpl(configuration: self.env.serviceConfig)
+        }.implements(AuthRepository.self)
     }
 }

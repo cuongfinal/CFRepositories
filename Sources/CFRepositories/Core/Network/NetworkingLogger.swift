@@ -2,7 +2,7 @@
 //  NetworkingLogger.swift
 //  iOSRepositories
 //
-//  Created by Order Tiger on 31/5/21.
+//  Created by Cuong Le on 31/5/21.
 //  Copyright © All rights reserved.
 //
 

@@ -2,7 +2,7 @@
 //  ParameterEncoder.swift
 //  iOSRepositories
 //
-//  Created by Order Tiger on 2/3/21.
+//  Created by Cuong Le on 2/3/21.
 //  Copyright © All rights reserved.
 //
 // swiftlint:disable conditional_returns_on_newline
@@ -49,24 +49,36 @@ enum ParameterEncoding {
 }
 
 private struct URLParameterEncoder: ParameterEncoder {
+    private func percentEscapeString(_ string: String) -> String {
+      var characterSet = CharacterSet.alphanumerics
+      characterSet.insert(charactersIn: "-._* ")
+      
+      return string
+        .addingPercentEncoding(withAllowedCharacters: characterSet)!
+        .replacingOccurrences(of: " ", with: "+")
+        .replacingOccurrences(of: " ", with: "+", options: [], range: nil)
+    }
+    
     func encode(urlRequest: inout URLRequest, with parameters: Parameters) throws {
         guard let url = urlRequest.url else { throw EncodingError.missingURL }
         
-        if var urlComponents = URLComponents(url: url,
-                                             resolvingAgainstBaseURL: false), !parameters.isEmpty {
-            urlComponents.queryItems = [URLQueryItem]()
-            
-            for (key, value) in parameters {
-                var value = "\(value)"
-                // TEMP fix bug encode city/area with space API findDeliveryzones
-                if !key.elementsEqual("city") && !key.elementsEqual("area") {
-                    value = value.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? value
-                }
-                let queryItem = URLQueryItem(name: key, value: value)
-                urlComponents.queryItems?.append(queryItem)
-            }
-            urlRequest.url = urlComponents.url
+        let parameterArray = parameters.map { (arg) -> String in
+            let (key, value) = arg
+            return "\(key)=\(self.percentEscapeString(value as! String))"
         }
+        urlRequest.httpBody = parameterArray.joined(separator: "&").data(using: String.Encoding.utf8)
+        
+//        if var urlComponents = URLComponents(url: url,
+//                                             resolvingAgainstBaseURL: false), !parameters.isEmpty {
+//            urlComponents.queryItems = [URLQueryItem]()
+//
+//            for (key, value) in parameters {
+//                var value = "\(value)"
+//                let queryItem = URLQueryItem(name: key, value: value)
+//                urlComponents.queryItems?.append(queryItem)
+//            }
+//            urlRequest.url = urlComponents.url
+//        }
         
         if urlRequest.value(forHTTPHeaderField: "Content-Type") == nil {
             urlRequest.setValue("application/x-www-form-urlencoded; charset=utf-8", forHTTPHeaderField: "Content-Type")

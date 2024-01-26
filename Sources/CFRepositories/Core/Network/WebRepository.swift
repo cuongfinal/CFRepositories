@@ -2,7 +2,7 @@
 //  WebRepository.swift
 //  iOSRepositories
 //
-//  Created by Order Tiger on 2/3/21.
+//  Created by Cuong Le on 2/3/21.
 //  Copyright © All rights reserved.
 //
 
@@ -24,22 +24,22 @@ extension WebRepository {
 extension WebRepository {
     func execute<Value>(endpoint: ResourceType,
                         httpCodes: HTTPCodes = .success,
-                        usingV1API: Bool = false,
+                        isFullPath: Bool = false,
                         logLevel: NetworkingLogLevel = .off) -> AnyPublisher<Value, Error> where Value: Decodable {
-        self.execute(endpoint: endpoint, httpCodes: httpCodes, usingV1API: usingV1API, logLevel: logLevel)
+        self.execute(endpoint: endpoint, httpCodes: httpCodes, isFullPath: isFullPath, logLevel: logLevel)
             .decodeJSON(httpCodes: httpCodes)
     }
     
     func execute(endpoint: ResourceType,
                  httpCodes: HTTPCodes = .success,
-                 usingV1API: Bool = false,
+                 isFullPath: Bool = false,
                  logLevel: NetworkingLogLevel = .off) -> AnyPublisher<SessionOutput, Error> {
         do {
             var baseURL = baseURL
-            if usingV1API && baseURL.contains("v2") {
-                baseURL = baseURL.replacingOccurrences(of: "v2", with: "v1")
+            var request = try endpoint.urlRequest(baseURL: baseURL)
+            if isFullPath {
+                request = try endpoint.urlRequest()
             }
-            let request = try endpoint.urlRequest(baseURL: baseURL)
             return session
                 .dataTaskPublisher(for: request)
                 .map {
@@ -54,10 +54,13 @@ extension WebRepository {
     
     func execute(endpoint: ResourceType,
                  httpCodes: HTTPCodes = .success,
+                 isFullPath: Bool = false,
                  logLevel: NetworkingLogLevel = .off,
                  retryIteration: Int = 0) async throws -> SessionOutput {
-        let request = try endpoint.urlRequest(baseURL: baseURL)
-        
+        var request = try endpoint.urlRequest(baseURL: baseURL)
+        if isFullPath {
+            request = try endpoint.urlRequest()
+        }
         let sessionResponse = try await session.data(from: request)
         
         self.logger.log(request: request, logLevel: logLevel)
@@ -89,9 +92,11 @@ extension WebRepository {
     
     func execute<Value>(endpoint: ResourceType,
                         httpCodes: HTTPCodes = .success,
+                        isFullPath: Bool = false,
                         logLevel: NetworkingLogLevel = .off,
                         retryIteration: Int = 0) async throws -> Value where Value: Decodable {
         let response = try await self.execute(endpoint: endpoint, httpCodes: httpCodes,
+                                              isFullPath: isFullPath,
                                               logLevel: logLevel, retryIteration: retryIteration)
         return try await decodeJSON(data: response.data)
     }

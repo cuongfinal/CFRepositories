@@ -2,7 +2,7 @@
 //  AuthWebRepository.swift
 //  iOSRepositories
 //
-//  Created by Order Tiger on 28/5/21.
+//  Created by Cuong Le on 28/5/21.
 //  Copyright © All rights reserved.
 //
 // swiftlint:disable line_length
@@ -11,12 +11,10 @@ import Combine
 import Foundation
 
 public protocol AuthRepository: WebRepository {
-//    func singUp(customer: Customer) async throws -> Customer
+//    func singUp(customer: UserInfo) async throws -> UserInfo
 //    func forgotPassword(login: String) async throws -> SessionOutput
 //
-//    func signIn(login: String, password: String) async throws -> Customer
-//    func temporaryToken() async throws
-//    func refreshToken() async throws
+    func signIn(email: String, password: String) async throws -> TokenInfo
 }
 
 struct AuthRepositoryImpl {
@@ -31,7 +29,7 @@ struct AuthRepositoryImpl {
     init(configuration: ServiceConfiguration) {
         self.session = configuration.urlSession
         self.baseURL = configuration.environment.url
-        self.interceptor = configuration.interceptor
+//        self.interceptor = configuration.interceptor
     }
 }
 
@@ -62,37 +60,18 @@ extension AuthRepositoryImpl {
 //        return try await execute(endpoint: API.forgotPassword(param: param), logLevel: .debug)
 //    }
 //
-//    func signIn(login: String, password: String) async throws -> Customer {
-//        let param: Parameters = ["userName": login, "password": password, "companyId": env.companyId]
-//        let result: SessionOutput = try await tokenParser(endpoint: API.signIn(param: param), logger: .debug)
-//        let customer: Customer = try await decodeJSON(data: result.data)
-//        _ = try? KeychainStore.shared.store(item: customer, for: .customer, update: \.userData.customer)
-//        return customer
-//    }
-//
-//    func refreshToken() async throws {
-//        print("refreshToken")
-//        let customer = appState[\.userData.customer]
-//        guard let login = customer?.email, let psw = customer?.password else { throw AuthError.authNeeded }
-//        _ = try await signIn(login: login, password: psw)
-//    }
-//
-//    func temporaryToken() async throws {
-//        print("temporaryToken")
-//        let ipAddress = Device.ipAddress ?? "95.87.65.249"
-//        let param: Parameters = ["userName": ipAddress, "password": "app", "companyId": env.companyId]
-//        _ = try await tokenParser(endpoint: API.temporaryToken(param: param), logger: .info)
-//    }
-//
-//    func tokenParser(endpoint: ResourceType, logger: NetworkingLogLevel = .off) async throws -> SessionOutput {
-//        let result: SessionOutput = try await execute(endpoint: endpoint, logLevel: logger)
-//        guard let response = result.response as? HTTPURLResponse,
-//              let token = response.value(forHTTPHeaderField: KeychainKey.token.rawValue) else {
-//                  throw AuthError.tokenFindError
-//              }
-//        _ = try? KeychainStore.shared.store(item: token, for: .token)
-//        return result
-//    }
+    func signIn(email: String, password: String) async throws -> TokenInfo {
+        
+        let param: Parameters = [
+            Constants.IdentityClientIdHeader: Constants.IdentityClientIdValue,
+            Constants.IdentityClientSecretHeader: Constants.IdentityClientSecretValue,
+            Constants.IdentityGrantTypeHeader: Constants.IdentityGrantTypeValue,
+            Constants.IdentityScopeHeader: Constants.IdentityScopeValue,
+            "username": email, "password": password]
+        
+        let tokenInfo:TokenInfo = try await execute(endpoint: API.signIn(param: param), isFullPath: true, logLevel: .debug)
+        return tokenInfo
+    }
 }
 
 // MARK: - Protocol impl
@@ -114,30 +93,26 @@ extension AuthRepositoryImpl: AuthRepository {
 extension AuthRepositoryImpl {
     enum API: ResourceType {
         case signIn(param: Parameters),
-             singUp(param: Parameters),
-             forgotPassword(param: Parameters),
-             temporaryToken(param: Parameters)
+             signUp(param: Parameters),
+             forgotPassword(param: Parameters)
         
         var endPoint: Endpoint {
             switch self {
             case .signIn:
-                return .post(path: "/customers/authenticate")
-            case .singUp:
-                return .post(path: "/customers")
+                return .post(path: "https://auth.crooti.com/connect/token")
+            case .signUp:
+                return .post(path: "/account/register")
             case .forgotPassword:
-                return .post(path: "/customerpasswordresettokens")
-            case .temporaryToken:
-                return .post(path: "/customers/temporary_token")
+                return .post(path: "/account/forgotPassword")
             }
         }
         
         var task: HTTPTask {
             switch self {
-            case .temporaryToken(let param),
-                    .signIn(let param),
-                    .forgotPassword(param: let param),
-                    .singUp(let param):
+            case .signUp(let param), .forgotPassword(let param) :
                 return .requestParameters(bodyParameters: param, encoding: .jsonEncoding)
+            case .signIn(let param):
+                return .requestParameters(encoding: .urlEncoding, urlParameters: param)
             }
         }
         
